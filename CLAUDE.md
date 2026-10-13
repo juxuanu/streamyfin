@@ -60,6 +60,7 @@ UI and headers:
 - `nativewind-classname-arrives-as-style` | a className passed to one of our own components reaches it as `style`; forward that, reading `className` drops it silently
 - `bottom-sheet-dismiss-before-present` | dismiss() on a BottomSheetModal that is not on screen leaves it unable to present, silently; follow `open` with useSheetOpenState
 - `swiftui-host-dead-while-keyboard-is-up` | an @expo/ui Host honors the keyboard safe area, so a small one draws but takes no taps while a keyboard is up; set ignoreSafeArea='keyboard'
+- `bottom-tabs-layout-report-keyed-on-outer-size` | native bottom tabs size scenes from the holder but only re-report when the outer view resizes; a keyboard up at launch leaves the tabs half height, patched in react-native-bottom-tabs
 
 State and data:
 - `use-network-aware-query-client-limitations` | Object.create breaks private fields; only for invalidateQueries

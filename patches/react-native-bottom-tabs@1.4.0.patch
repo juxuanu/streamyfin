@@ -67,3 +67,49 @@ index dd4c3c883720d265126b9dd544c9389a3ed8cbdd..0d4c99fdfc6fc70b2d83980d6bcc9ab9
        return .search
      }
    }
+diff --git a/android/src/main/java/com/rcttabview/RCTTabView.kt b/android/src/main/java/com/rcttabview/RCTTabView.kt
+index 3c3d4bdbe2b070f8cc177f6175429fdcdf2d2304..70337333698066e38ed302c24a7b7b3a569faa4a 100644
+--- a/android/src/main/java/com/rcttabview/RCTTabView.kt
++++ b/android/src/main/java/com/rcttabview/RCTTabView.kt
+@@ -23,6 +23,7 @@
+ import androidx.core.view.AccessibilityDelegateCompat
+ import androidx.core.view.MenuItemCompat
+ import androidx.core.view.ViewCompat
++import androidx.core.view.WindowInsetsCompat
+ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+ import androidx.core.view.forEachIndexed
+ import coil3.ImageLoader
+@@ -100,17 +101,26 @@
+     uiModeConfiguration = resources.configuration.uiMode
+ 
+     post {
+-      addOnLayoutChangeListener { _, left, top, right, bottom,
+-                                  _, _, _, _ ->
+-        val newWidth = right - left
+-        val newHeight = bottom - top
+-
++      addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+         // Notify about tab bar height.
+         onTabBarMeasuredListener?.invoke(Utils.convertPixelsToDp(context, bottomNavigation.height).toInt())
+ 
++        // Under adjustResize Material pads the tab bar by the keyboard inset, which shrinks the
++        // layout holder while the keyboard is up. The scenes keep their size across that (the
++        // keyboard overlays them), so a layout taken with the keyboard up is not reported and the
++        // one after it closes is. That later layout is compared by the holder's own size, not this
++        // view's: the holder growing back does not change this view, and dropping it left the
++        // scenes at the shrunk height for the session when the app opened with the keyboard up.
++        val imeVisible = ViewCompat.getRootWindowInsets(this)
++          ?.isVisible(WindowInsetsCompat.Type.ime()) == true
++        if (imeVisible) return@addOnLayoutChangeListener
++
++        val newWidth = layoutHolder.width
++        val newHeight = layoutHolder.height
++
+         if (newWidth != lastReportedSize?.width || newHeight != lastReportedSize?.height) {
+-          val dpWidth = Utils.convertPixelsToDp(context, layoutHolder.width)
+-          val dpHeight = Utils.convertPixelsToDp(context, layoutHolder.height)
++          val dpWidth = Utils.convertPixelsToDp(context, newWidth)
++          val dpHeight = Utils.convertPixelsToDp(context, newHeight)
+ 
+           onNativeLayoutListener?.invoke(dpWidth, dpHeight)
+           lastReportedSize = Size(newWidth, newHeight)
